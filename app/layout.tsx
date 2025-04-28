@@ -11,7 +11,6 @@ import { Providers } from "@/components/utilities/providers"
 import { TailwindIndicator } from "@/components/utilities/tailwind-indicator"
 import { cn } from "@/lib/utils"
 import { ClerkProvider } from "@clerk/nextjs"
-import { auth } from "@clerk/nextjs/server"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
@@ -28,13 +27,23 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { userId } = await auth()
+  // Try to get user ID but don't throw an error if it fails
+  let userId
+  try {
+    // Import auth dynamically to prevent issues with middleware detection
+    const { auth } = await import("@clerk/nextjs/server")
+    const authResult = await auth()
+    userId = authResult.userId
 
-  if (userId) {
-    const profileRes = await getProfileByUserIdAction(userId)
-    if (!profileRes.isSuccess) {
-      await createProfileAction({ userId })
+    if (userId) {
+      const profileRes = await getProfileByUserIdAction(userId)
+      if (!profileRes.isSuccess) {
+        await createProfileAction({ userId })
+      }
     }
+  } catch (error) {
+    console.error("Auth error:", error)
+    // Continue without user ID
   }
 
   return (

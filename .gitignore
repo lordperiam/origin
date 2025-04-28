@@ -27,6 +27,10 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
+.env.development
+.env.test
+.env.production
 
 # vercel
 .vercel
@@ -37,3 +41,36 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# secrets and credentials
+*credentials*.json
+*serviceAccount*.json
+*.key
+*.pem
+*.cert
+
+# Supabase local development
+/supabase/.branches
+/supabase/.temp
+
+# Stripe webhook secret and test data
+/.stripe
+
+# Backup files
+*.bak
+*backup*
+temp-env.txt
+
+# Editor directories and files
+.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
