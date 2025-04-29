@@ -6,7 +6,7 @@
  * Key features:
  * - Authentication: Integrates ClerkProvider for user auth
  * - Theme Management: Uses Next Themes with a dark default theme
- * - Profile Sync: Creates a user profile on first login if it doesn’t exist
+ * - Profile Sync: Creates a user profile on first login if it doesn't exist
  *
  * @dependencies
  * - ClerkProvider: Provides Clerk authentication context
@@ -60,7 +60,7 @@ export default async function RootLayout({
     // Dynamically import auth to avoid middleware issues
     const { auth } = await import("@clerk/nextjs/server")
     const authResult = await auth()
-    userId = authResult.userId
+    userId = authResult.userId || undefined
 
     // If user is authenticated, ensure profile exists
     if (userId) {
