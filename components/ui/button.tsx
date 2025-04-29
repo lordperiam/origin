@@ -1,11 +1,37 @@
+"use client"
+
+/**
+ * @description
+ * A customizable button component built with Shadcn.
+ * This component provides various styles and sizes for buttons, making it reusable across the Neurogenesis application.
+ *
+ * Key features:
+ * - Variants: Supports styles like default, destructive, outline, secondary, ghost, and link
+ * - Sizes: Offers sizes including default, small, large, and icon-only
+ * - Customizable: Allows passing additional props and class names for further styling
+ *
+ * @dependencies
+ * - React: Core library for building the component
+ * - clsx: Utility for conditional class name concatenation
+ * - Tailwind Merge: Merges Tailwind classes efficiently
+ * - class-variance-authority: Defines button variants and sizes
+ * - @radix-ui/react-slot: Enables composition with the Slot component
+ *
+ * @notes
+ * - Uses forwardRef for DOM access via ref forwarding
+ * - Handles disabled state by adjusting opacity and pointer events
+ * - The icon variant is optimized for buttons containing only an icon
+ * - Follows Neurogenesis design system: gold primary (#FFD700) on black background
+ */
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
 
+// Define button variants and sizes using cva
 const buttonVariants = cva(
-  "ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "focus-visible:ring-ring ring-offset-background inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -13,7 +39,7 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border-input bg-background hover:bg-accent hover:text-accent-foreground border",
+          "border-input hover:bg-accent hover:text-accent-foreground border",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
@@ -33,14 +59,17 @@ const buttonVariants = cva(
   }
 )
 
+// Interface for Button props, combining HTML attributes and variant props
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+  asChild?: boolean // Allows the button to render as a child component via Slot
 }
 
+// Button component with ref forwarding
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    // Use Slot if asChild is true, otherwise use a standard button element
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
@@ -51,6 +80,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     )
   }
 )
-Button.displayName = "Button"
+Button.displayName = "Button" // Set display name for debugging
 
 export { Button, buttonVariants }

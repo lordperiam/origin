@@ -18,8 +18,6 @@
  * - Handles auth errors gracefully by continuing without user ID
  */
 
-"use server"
-
 import {
   createProfileAction,
   getProfileByUserIdAction
@@ -57,21 +55,30 @@ export default async function RootLayout({
 
   // Attempt to get user ID and sync profile
   try {
-    // Dynamically import auth to avoid middleware issues
-    const { auth } = await import("@clerk/nextjs/server")
-    const authResult = await auth()
-    userId = authResult.userId || undefined
+    // Import auth in a way that allows the app to continue if Clerk isn't configured yet
+    try {
+      // Dynamically import auth to avoid middleware issues
+      const { auth } = await import("@clerk/nextjs/server")
+      const authResult = await auth()
+      userId = authResult.userId || undefined
 
-    // If user is authenticated, ensure profile exists
-    if (userId) {
-      const profileRes = await getProfileByUserIdAction(userId)
-      if (!profileRes.isSuccess) {
-        await createProfileAction({ userId })
+      // If user is authenticated, ensure profile exists
+      if (userId) {
+        const profileRes = await getProfileByUserIdAction(userId)
+        if (!profileRes.isSuccess) {
+          await createProfileAction({ userId })
+        }
       }
+    } catch (clerkError) {
+      console.error("Clerk auth error:", clerkError)
+      // Proceed without authentication - this allows development without Clerk setup
+      console.log(
+        "Continuing without authentication - set up Clerk middleware for auth features"
+      )
     }
   } catch (error) {
-    console.error("Auth error:", error)
-    // Proceed without user ID if auth fails
+    console.error("Profile sync error:", error)
+    // Proceed without user ID if profile sync fails
   }
 
   return (
