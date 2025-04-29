@@ -86,6 +86,16 @@ const initDb = async () => {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS transcripts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        debate_id UUID NOT NULL REFERENCES debates(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        language TEXT NOT NULL DEFAULT 'en',
+        verified BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
     `)
 
     console.log("Database tables initialized successfully")

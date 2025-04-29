@@ -28,6 +28,7 @@ import {
   TelegramResponse,
   DiscordResponse
 } from "@/types/platform-types"
+import { formatDebateTitle } from "@/lib/utils/format-debate-title"
 import { eq } from "drizzle-orm"
 
 /**
@@ -77,7 +78,7 @@ export async function fetchDebatesFromPlatformAction(
     const normalizedDebates: InsertDebate[] = fetchedDebates.map(debate => ({
       sourcePlatform: platform,
       sourceId: debate.id,
-      title: debate.title || "Untitled Debate", // Default title if missing
+      title: formatDebateTitle(debate.title || "Untitled Debate"), // Clean and format the title
       participants: debate.participants || [], // Empty array if no participants
       date: debate.date ? new Date(debate.date) : undefined // Convert to Date object or undefined
     }))

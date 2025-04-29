@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "npx tsx scripts/kill-port.ts && next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "next lint",
+    "kill-port": "npx tsx scripts/kill-port.ts",
+    "clean-start": "npm run kill-port && npm run dev",
     "clean": "npm run lint:fix && npm run format:write",
     "type-check": "tsc --noEmit",
     "lint:fix": "next lint --fix",
