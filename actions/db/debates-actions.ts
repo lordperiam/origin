@@ -14,7 +14,20 @@ import {
   SelectDebate
 } from "@/db/schema/debates-schema"
 import { ActionState } from "@/types"
-import { Platform } from "@/types/platform-types"
+import {
+  Platform,
+  PlatformItem,
+  YouTubeResponse,
+  TwitchResponse,
+  XResponse,
+  PodcastsResponse,
+  SubstackResponse,
+  SpotifyResponse,
+  TikTokResponse,
+  RedditResponse,
+  TelegramResponse,
+  DiscordResponse
+} from "@/types/platform-types"
 import { eq } from "drizzle-orm"
 
 /**
@@ -96,8 +109,8 @@ export async function fetchDebatesFromPlatformAction(
  * @returns A promise resolving to an ActionState with the debate data or an error message.
  * 
  * @remarks
- * - Queries the debates table using Drizzle ORM’s findFirst method.
- * - Returns failure if the debate isn’t found or a database error occurs.
+ * - Queries the debates table using Drizzle ORM's findFirst method.
+ * - Returns failure if the debate isn't found or a database error occurs.
  * - Used by the transcript page to display debate details alongside the transcript.
  * 
  * @throws {Error} Logs and returns failure if the database query fails (e.g., connection issues).
@@ -108,7 +121,7 @@ export async function fetchDebatesFromPlatformAction(
  */
 export async function getDebateByIdAction(
   debateId: string
-): Promise<ActionState<SelectDebate>> {
+): Promise<ActionState<SelectDebate | undefined>> {
   try {
     // Validate input
     if (!debateId) {
@@ -119,9 +132,11 @@ export async function getDebateByIdAction(
     }
 
     // Fetch the debate from the database
-    const debate = await db.query.debatesTable.findFirst({
-      where: eq(debatesTable.id, debateId)
-    })
+    const [debate] = await db
+      .select()
+      .from(debatesTable)
+      .where(eq(debatesTable.id, debateId))
+      .limit(1)
 
     if (!debate) {
       return {
@@ -150,7 +165,7 @@ export async function getDebateByIdAction(
  * @returns A promise resolving to an ActionState with all debates or an error message.
  * 
  * @remarks
- * - Uses Drizzle ORM’s select method to fetch all debate records.
+ * - Uses Drizzle ORM's select method to fetch all debate records.
  * - Included from the starter code for debugging and listing purposes.
  * 
  * @throws {Error} Logs and returns failure if the database query fails.
@@ -189,12 +204,12 @@ export async function getAllDebatesAction(): Promise<ActionState<SelectDebate[]>
  * - Expected debate object shape: { id: string, title?: string, participants?: string[], date?: string }
  * - Retained from original code; extended for multiple platforms.
  */
-async function fetchFromPlatform(platform: Platform, apiKey: string) {
+async function fetchFromPlatform(platform: Platform, apiKey: string): Promise<PlatformItem[]> {
   if (platform === "YouTube") {
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&q=debate&type=video&part=snippet&maxResults=10`
     );
-    const data = await response.json();
+    const data = await response.json() as YouTubeResponse;
     return data.items.map(item => ({
       id: item.id.videoId,
       title: item.snippet.title,
@@ -211,7 +226,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
         }
       }
     );
-    const data = await response.json();
+    const data = await response.json() as TwitchResponse;
     return data.data.map(item => ({
       id: item.id,
       title: item.title,
@@ -227,7 +242,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
         }
       }
     );
-    const data = await response.json();
+    const data = await response.json() as XResponse;
     return data.data.map(item => ({
       id: item.id,
       title: item.text.substring(0, 100),
@@ -243,7 +258,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
         }
       }
     );
-    const data = await response.json();
+    const data = await response.json() as PodcastsResponse;
     return data.results.map(item => ({
       id: item.id,
       title: item.title_original,
@@ -259,7 +274,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
         }
       }
     );
-    const data = await response.json();
+    const data = await response.json() as SubstackResponse;
     return data.posts.map(item => ({
       id: item.id,
       title: item.title,
@@ -275,7 +290,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
         }
       }
     );
-    const data = await response.json();
+    const data = await response.json() as SpotifyResponse;
     return data.episodes.items.map(item => ({
       id: item.id,
       title: item.name,
@@ -291,7 +306,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
         }
       }
     );
-    const data = await response.json();
+    const data = await response.json() as TikTokResponse;
     return data.videos.map(item => ({
       id: item.id,
       title: item.desc.substring(0, 100),
@@ -308,7 +323,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
         }
       }
     );
-    const data = await response.json();
+    const data = await response.json() as RedditResponse;
     return data.data.children.map(item => ({
       id: item.data.id,
       title: item.data.title,
@@ -319,7 +334,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
     const response = await fetch(
       `https://api.telegram.org/bot${apiKey}/searchPublicMessages?query=debate&limit=10`
     );
-    const data = await response.json();
+    const data = await response.json() as TelegramResponse;
     return data.result.messages.map(item => ({
       id: item.message_id,
       title: item.text.substring(0, 100),
@@ -335,8 +350,8 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
         }
       }
     );
-    const data = await response.json();
-    return data.map(item => ({
+    const data = await response.json() as DiscordResponse;
+    return data.guilds.map(item => ({
       id: item.id,
       title: item.name,
       participants: [item.owner.username],

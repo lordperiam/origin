@@ -188,11 +188,13 @@ export async function generateTranscriptAction(
  */
 export async function getTranscriptAction(
   transcriptId: string
-): Promise<ActionState<SelectTranscript>> {
+): Promise<ActionState<SelectTranscript | undefined>> {
   try {
-    const transcript = await db.query.transcripts.findFirst({
-      where: eq(transcriptsTable.id, transcriptId)
-    })
+    const [transcript] = await db
+      .select()
+      .from(transcriptsTable)
+      .where(eq(transcriptsTable.id, transcriptId))
+      .limit(1)
     
     if (!transcript) {
       return {
@@ -229,10 +231,11 @@ export async function getDebateTranscriptsAction(
   debateId: string
 ): Promise<ActionState<SelectTranscript[]>> {
   try {
-    const transcripts = await db.query.transcripts.findMany({
-      where: eq(transcriptsTable.debateId, debateId)
-    })
-    
+    const transcripts = await db
+      .select()
+      .from(transcriptsTable)
+      .where(eq(transcriptsTable.debateId, debateId))
+
     return {
       isSuccess: true,
       message: "Transcripts retrieved successfully",

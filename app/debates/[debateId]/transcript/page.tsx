@@ -67,9 +67,14 @@ export default async function TranscriptPage({ params }: TranscriptPageProps) {
     return (
       <div className="container mx-auto py-12 text-center">
         <h1 className="mb-8 text-4xl font-bold text-white">
-          {debate.title || "Untitled Debate"} - Transcript
+          {(debate?.title ?? "Untitled Debate") + " - Transcript"}
         </h1>
-        <p className="text-white">No transcript available for this debate.</p>
+
+        <div className="mt-4" />
+
+        <div>
+          <p className="text-white">No transcript available for this debate.</p>
+        </div>
       </div>
     )
   }
@@ -80,10 +85,15 @@ export default async function TranscriptPage({ params }: TranscriptPageProps) {
   // Render the page with debate title and transcript content
   return (
     <div className="container mx-auto py-12">
-      <h1 className="mb-8 text-4xl font-bold text-white">
-        {debate.title || "Untitled Debate"} - Transcript
-      </h1>
-      <TranscriptViewer content={transcript.content} />
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-white">
+          {(debate?.title ?? "Untitled Debate") + " - Transcript"}
+        </h1>
+      </div>
+
+      <div>
+        <TranscriptViewer content={transcript?.content ?? ""} />
+      </div>
     </div>
   )
 }

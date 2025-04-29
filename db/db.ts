@@ -15,6 +15,7 @@ import { drizzle } from "drizzle-orm/postgres-js"
 import { pgTable } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import postgres from "postgres"
+import { relations } from "drizzle-orm"
 
 /**
  * Load environment variables from .env.local.
@@ -23,31 +24,24 @@ import postgres from "postgres"
 config({ path: ".env.local" })
 
 /**
- * Schema object combining all table definitions.
- * Used by Drizzle ORM to map database tables to TypeScript types for type-safe queries.
- *
- * Key features:
- * - profiles: User profiles with membership and payment info
- * - debates: Debate metadata from various platforms
- * - transcripts: Debate transcriptions for analysis
- * - analyses: AI-generated analysis results
- */
-const schema = {
-  profiles: profilesTable,
-  debates: debatesTable,
-  transcripts: transcriptsTable,
-  analyses: analysesTable
-}
-
-/**
- * PostgreSQL client instance using the DATABASE_URL from environment variables.
- * This client handles the low-level connection to the PostgreSQL database.
- *
- * @dependencies
- * - postgres: Provides the PostgreSQL client implementation
+ * PostgreSQL client instances
  */
 const queryClient = postgres(process.env.DATABASE_URL!)
 const migrationClient = postgres(process.env.DATABASE_URL!, { max: 1 })
+
+/**
+ * Define table relations
+ */
+const debatesRelations = relations(debatesTable, ({ many }) => ({
+  transcripts: many(transcriptsTable)
+}))
+
+const transcriptsRelations = relations(transcriptsTable, ({ one }) => ({
+  debate: one(debatesTable, {
+    fields: [transcriptsTable.debateId],
+    references: [debatesTable.id]
+  })
+}))
 
 /**
  * Drizzle ORM database instance.
@@ -66,7 +60,16 @@ const migrationClient = postgres(process.env.DATABASE_URL!, { max: 1 })
  * - No migrations are generated here per project rules; migrations are handled separately
  * - Edge case: If DATABASE_URL is invalid, the app will fail to start (handled by runtime)
  */
-export const db = drizzle(queryClient, { schema })
+export const db = drizzle(queryClient, {
+  schema: {
+    ...debatesRelations,
+    ...transcriptsRelations,
+    debates: debatesTable,
+    transcripts: transcriptsTable,
+    profiles: profilesTable,
+    analyses: analysesTable
+  }
+})
 
 // Initialize tables if they don't exist
 const initDb = async () => {

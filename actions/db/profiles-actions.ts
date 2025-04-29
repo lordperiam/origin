@@ -33,11 +33,17 @@ export async function getProfileByUserIdAction(
   userId: string
 ): Promise<ActionState<SelectProfile>> {
   try {
-    const profile = await db.query.profiles.findFirst({
-      where: eq(profilesTable.userId, userId)
-    })
+    const [profile] = await db
+      .select()
+      .from(profilesTable)
+      .where(eq(profilesTable.userId, userId))
+      .limit(1)
+
     if (!profile) {
-      return { isSuccess: false, message: "Profile not found" }
+      return {
+        isSuccess: false,
+        message: "Profile not found"
+      }
     }
 
     return {
@@ -46,8 +52,11 @@ export async function getProfileByUserIdAction(
       data: profile
     }
   } catch (error) {
-    console.error("Error getting profile by user id", error)
-    return { isSuccess: false, message: "Failed to get profile" }
+    console.error("Error getting profile by user id:", error)
+    return {
+      isSuccess: false,
+      message: "Failed to get profile by user id"
+    }
   }
 }
 
