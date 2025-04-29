@@ -1,7 +1,8 @@
 /*
 Contains server actions related to debates in the DB.
-This file provides actions to fetch debates from external platforms and store them in the database.
-It supports the core functionality of debate sourcing as outlined in the technical specification.
+This file provides actions to fetch debates from external platforms, store them in the database,
+and retrieve debates by ID or all debates.
+It supports the core functionality of debate sourcing and retrieval as outlined in the technical specification.
 */
 
 "use server"
@@ -13,7 +14,7 @@ import {
   SelectDebate
 } from "@/db/schema/debates-schema"
 import { ActionState } from "@/types"
-import { Platform } from "@/types/platform-types" // Assuming a types file for platform definitions
+import { Platform } from "@/types/platform-types"
 import { eq } from "drizzle-orm"
 
 /**
@@ -89,6 +90,93 @@ export async function fetchDebatesFromPlatformAction(
 }
 
 /**
+ * Retrieves a single debate by its ID from the database.
+ * 
+ * @param debateId - The UUID of the debate to retrieve.
+ * @returns A promise resolving to an ActionState with the debate data or an error message.
+ * 
+ * @remarks
+ * - Queries the debates table using Drizzle ORM’s findFirst method.
+ * - Returns failure if the debate isn’t found or a database error occurs.
+ * - Used by the transcript page to display debate details alongside the transcript.
+ * 
+ * @throws {Error} Logs and returns failure if the database query fails (e.g., connection issues).
+ * 
+ * @example
+ * const result = await getDebateByIdAction("debate_123");
+ * if (result.isSuccess) console.log(result.data.title);
+ */
+export async function getDebateByIdAction(
+  debateId: string
+): Promise<ActionState<SelectDebate>> {
+  try {
+    // Validate input
+    if (!debateId) {
+      return {
+        isSuccess: false,
+        message: "debateId is required"
+      }
+    }
+
+    // Fetch the debate from the database
+    const debate = await db.query.debatesTable.findFirst({
+      where: eq(debatesTable.id, debateId)
+    })
+
+    if (!debate) {
+      return {
+        isSuccess: false,
+        message: "Debate not found"
+      }
+    }
+
+    return {
+      isSuccess: true,
+      message: "Debate retrieved successfully",
+      data: debate
+    }
+  } catch (error) {
+    console.error("Error retrieving debate:", error)
+    return {
+      isSuccess: false,
+      message: "Failed to retrieve debate"
+    }
+  }
+}
+
+/**
+ * Retrieves all debates from the database.
+ * 
+ * @returns A promise resolving to an ActionState with all debates or an error message.
+ * 
+ * @remarks
+ * - Uses Drizzle ORM’s select method to fetch all debate records.
+ * - Included from the starter code for debugging and listing purposes.
+ * 
+ * @throws {Error} Logs and returns failure if the database query fails.
+ * 
+ * @example
+ * const result = await getAllDebatesAction();
+ * if (result.isSuccess) console.log(result.data);
+ */
+export async function getAllDebatesAction(): Promise<ActionState<SelectDebate[]>> {
+  try {
+    const debates = await db.select().from(debatesTable)
+    return {
+      isSuccess: true,
+      message: "Debates retrieved successfully",
+      data: debates
+    }
+  } catch (error) {
+    console.error("Error retrieving debates:", error)
+    return {
+      isSuccess: false,
+      message: "Failed to retrieve debates"
+    }
+  }
+}
+
+/**
  * Placeholder function to fetch debates from a platform using its API.
  * This should be replaced with actual API calls for each supported platform.
  * 
@@ -97,19 +185,9 @@ export async function fetchDebatesFromPlatformAction(
  * @returns A promise resolving to an array of debate objects.
  * 
  * @remarks
- * - Currently returns an empty array as a placeholder.
- * - Should implement platform-specific logic (e.g., YouTube Data API search).
+ * - Implements logic for YouTube, Twitch, X, Podcasts, Substack, Spotify, TikTok, Reddit, Telegram, and Discord.
  * - Expected debate object shape: { id: string, title?: string, participants?: string[], date?: string }
- * 
- * @example
- * For YouTube:
- * const response = await fetch(`https://www.googleapis.com/youtube/v3/search?key=${apiKey}&q=debate`);
- * return response.json().then(data => data.items.map(item => ({
- *   id: item.id.videoId,
- *   title: item.snippet.title,
- *   participants: [], // Extract from description or metadata
- *   date: item.snippet.publishedAt
- * })));
+ * - Retained from original code; extended for multiple platforms.
  */
 async function fetchFromPlatform(platform: Platform, apiKey: string) {
   if (platform === "YouTube") {
@@ -265,38 +343,6 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
       date: item.created_at
     }));
   }
-  // Default case
+  // Default case for unsupported platforms
   return [];
-}
-
-// Additional CRUD actions can be added below as needed in future steps
-
-/**
- * Retrieves all debates from the database.
- * 
- * @returns A promise resolving to an ActionState with all debates or an error message.
- * 
- * @remarks
- * - Simple read action for testing and debugging purposes.
- * - Uses Drizzle ORM's query method to fetch all records.
- * 
- * @example
- * const result = await getAllDebatesAction();
- * if (result.isSuccess) console.log(result.data);
- */
-export async function getAllDebatesAction(): Promise<ActionState<SelectDebate[]>> {
-  try {
-    const debates = await db.select().from(debatesTable)
-    return {
-      isSuccess: true,
-      message: "Debates retrieved successfully",
-      data: debates
-    }
-  } catch (error) {
-    console.error("Error retrieving debates:", error)
-    return {
-      isSuccess: false,
-      message: "Failed to retrieve debates"
-    }
-  }
 }
