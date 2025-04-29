@@ -46,7 +46,8 @@ const schema = {
  * @dependencies
  * - postgres: Provides the PostgreSQL client implementation
  */
-const client = postgres(process.env.DATABASE_URL!, { max: 1 })
+const queryClient = postgres(process.env.DATABASE_URL!)
+const migrationClient = postgres(process.env.DATABASE_URL!, { max: 1 })
 
 /**
  * Drizzle ORM database instance.
@@ -65,7 +66,7 @@ const client = postgres(process.env.DATABASE_URL!, { max: 1 })
  * - No migrations are generated here per project rules; migrations are handled separately
  * - Edge case: If DATABASE_URL is invalid, the app will fail to start (handled by runtime)
  */
-export const db = drizzle(client, { schema })
+export const db = drizzle(queryClient, { schema })
 
 // Initialize tables if they don't exist
 const initDb = async () => {
@@ -87,6 +88,9 @@ const initDb = async () => {
     console.log("Database tables initialized successfully")
   } catch (error) {
     console.error("Error initializing database tables:", error)
+  } finally {
+    // Close the migration client after initialization
+    await migrationClient.end()
   }
 }
 

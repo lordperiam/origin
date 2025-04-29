@@ -286,7 +286,7 @@ async function fetchFromPlatform(platform: Platform, apiKey: string) {
  */
 export async function getAllDebatesAction(): Promise<ActionState<SelectDebate[]>> {
   try {
-    const debates = await db.query.debatesTable.findMany()
+    const debates = await db.select().from(debatesTable)
     return {
       isSuccess: true,
       message: "Debates retrieved successfully",
