@@ -12,6 +12,8 @@ import {
 } from "@/db/schema"
 import { config } from "dotenv"
 import { drizzle } from "drizzle-orm/postgres-js"
+import { pgTable } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
 import postgres from "postgres"
 
 /**
@@ -44,7 +46,7 @@ const schema = {
  * @dependencies
  * - postgres: Provides the PostgreSQL client implementation
  */
-const client = postgres(process.env.DATABASE_URL!)
+const client = postgres(process.env.DATABASE_URL!, { max: 1 })
 
 /**
  * Drizzle ORM database instance.
@@ -64,3 +66,29 @@ const client = postgres(process.env.DATABASE_URL!)
  * - Edge case: If DATABASE_URL is invalid, the app will fail to start (handled by runtime)
  */
 export const db = drizzle(client, { schema })
+
+// Initialize tables if they don't exist
+const initDb = async () => {
+  try {
+    // Create tables if they don't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS debates (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        source_platform TEXT NOT NULL,
+        source_id TEXT NOT NULL,
+        title TEXT,
+        participants TEXT[],
+        date TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `)
+
+    console.log("Database tables initialized successfully")
+  } catch (error) {
+    console.error("Error initializing database tables:", error)
+  }
+}
+
+// Run initialization
+initDb()
