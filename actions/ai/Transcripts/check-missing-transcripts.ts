@@ -1,4 +1,5 @@
 // check-missing-transcripts.ts
+import "module-alias/register"
 import { db } from "@/db/db"
 import { debatesTable } from "@/db/schema/debates-schema"
 import { transcriptsTable } from "@/db/schema/transcripts-schema"

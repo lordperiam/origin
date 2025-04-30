@@ -19,7 +19,7 @@ async function main() {
     console.error("Debate not found for ID:", debateId)
     process.exit(1)
   }
-  const result = await generateTranscriptAction(debateId, sourceUrl, platform)
+  const result = await generateTranscriptAction(debateId, sourceUrl, platform as "YouTube" | "Spotify" | "DirectMedia" | undefined)
   if (result.isSuccess) {
     console.log("Transcript generated and stored:")
     console.log(result.data)
