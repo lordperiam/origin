@@ -1,0 +1,3 @@
+# Protected paths - DO NOT MODIFY STRUCTURE
+src/app/debates/[debateId]/
+src/actions/ai/
