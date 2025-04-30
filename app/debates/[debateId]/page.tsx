@@ -1,18 +1,14 @@
-import { notFound } from "next/navigation"
 import DebateDetails from "@/components/debates/debate-details"
 
-interface DebatePageParams {
+interface DebatePageProps {
   params: {
     debateId: string
   }
 }
 
-export default function DebatePage({ params }: DebatePageParams) {
+export default function DebatePage({ params }: DebatePageProps) {
   const { debateId } = params
-
-  if (!debateId) {
-    return notFound()
-  }
+  // Your component logic
 
   return (
     <div className="container mx-auto py-12">
