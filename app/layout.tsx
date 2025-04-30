@@ -20,7 +20,7 @@
 
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Inter } from "next/font/google"
 import "./globals.css"
@@ -28,6 +28,22 @@ import SearchBar from "@/components/ui/search-bar"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({ subsets: ["latin"] })
+
+function GlobalSearchBar() {
+  const [query, setQuery] = useState("")
+  return (
+    <form role="search" className="mx-auto my-4 w-full max-w-md">
+      <input
+        type="search"
+        placeholder="Search..."
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        className="w-full rounded border p-2"
+        aria-label="Global search"
+      />
+    </form>
+  )
+}
 
 export default function RootLayout({
   children
@@ -37,12 +53,21 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </head>
         <body
           className={cn(
             "bg-background mx-auto min-h-screen w-full scroll-smooth antialiased",
             inter.className
           )}
         >
+          <a
+            href="#main-content"
+            className="sr-only absolute z-50 bg-black p-2 text-white focus:not-sr-only"
+          >
+            Skip to content
+          </a>
           <header className="bg-primary p-4 text-white">
             <div className="container mx-auto flex items-center justify-between">
               <h1 className="text-2xl font-bold">Neurogenesis</h1>
@@ -52,7 +77,10 @@ export default function RootLayout({
               />
             </div>
           </header>
-          <main className="container mx-auto py-8">{children}</main>
+          <GlobalSearchBar />
+          <main id="main-content" className="container mx-auto py-8">
+            {children}
+          </main>
           <footer className="bg-primary p-4 text-center text-white">
             © 2025 Neurogenesis. All rights reserved.
           </footer>

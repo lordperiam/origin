@@ -50,6 +50,19 @@ export default function AnalysisViewer({ analysis }: AnalysisViewerProps) {
     argumentQuality?: number
   }
 
+  // Helper to check for stub error messages
+  function isStubResult(value: any) {
+    if (typeof value === "string") {
+      return value.includes("not yet implemented")
+    }
+    if (Array.isArray(value)) {
+      return value.some(
+        v => typeof v === "string" && v.includes("not yet implemented")
+      )
+    }
+    return false
+  }
+
   return (
     <Card className="bg-card text-foreground">
       <CardHeader>
@@ -60,8 +73,12 @@ export default function AnalysisViewer({ analysis }: AnalysisViewerProps) {
           {/* Rhetorical Devices Section */}
           <div>
             <h3 className="text-lg font-semibold">Rhetorical Devices</h3>
-            {results.rhetoricalDevices &&
-            results.rhetoricalDevices.length > 0 ? (
+            {isStubResult(results.rhetoricalDevices) ? (
+              <p className="text-yellow-500">
+                Rhetorical device detection not yet implemented.
+              </p>
+            ) : results.rhetoricalDevices &&
+              results.rhetoricalDevices.length > 0 ? (
               <ul className="list-disc pl-5">
                 {results.rhetoricalDevices.map((device, index) => (
                   <li key={index}>{device}</li>
@@ -75,7 +92,11 @@ export default function AnalysisViewer({ analysis }: AnalysisViewerProps) {
           {/* Logical Fallacies Section */}
           <div>
             <h3 className="text-lg font-semibold">Logical Fallacies</h3>
-            {results.fallacies && results.fallacies.length > 0 ? (
+            {isStubResult(results.fallacies) ? (
+              <p className="text-yellow-500">
+                Logical fallacy detection not yet implemented.
+              </p>
+            ) : results.fallacies && results.fallacies.length > 0 ? (
               <ul className="list-disc pl-5">
                 {results.fallacies.map((fallacy, index) => (
                   <li key={index}>{fallacy}</li>
@@ -89,11 +110,17 @@ export default function AnalysisViewer({ analysis }: AnalysisViewerProps) {
           {/* Argument Quality Section */}
           <div>
             <h3 className="text-lg font-semibold">Argument Quality</h3>
-            <p>
-              {results.argumentQuality
-                ? `Rated ${results.argumentQuality}/10`
-                : "Not rated"}
-            </p>
+            {isStubResult(results.argumentQuality) ? (
+              <p className="text-yellow-500">
+                Argument quality rating not yet implemented.
+              </p>
+            ) : (
+              <p>
+                {results.argumentQuality
+                  ? `Rated ${results.argumentQuality}/10`
+                  : "Not rated"}
+              </p>
+            )}
           </div>
         </div>
       </CardContent>

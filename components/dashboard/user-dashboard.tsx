@@ -62,6 +62,31 @@ export default function UserDashboard({
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
+      {/* Summary Stats Section */}
+      <Card className="bg-card text-foreground md:col-span-2">
+        <CardHeader>
+          <CardTitle>Summary Stats</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-8">
+            <div>
+              <p className="text-lg font-semibold">Total Debates</p>
+              <p className="text-2xl">{debates.length}</p>
+            </div>
+            <div>
+              <p className="text-lg font-semibold">Unique Participants</p>
+              <p className="text-2xl">
+                {
+                  Array.from(
+                    new Set(debates.flatMap(d => d.participants || []))
+                  ).length
+                }
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Recent Debates Section */}
       <Card className="bg-card text-foreground">
         <CardHeader>

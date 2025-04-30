@@ -98,9 +98,9 @@ export default function Simulation() {
   const [error, setError] = useState<string | null>(null)
   const [currentTab, setCurrentTab] = useState<string>("parameters")
   const [simulationResult, setSimulationResult] = useState<{
-    debateId: string
-    transcriptId: string
-    message: string
+    debateId?: string
+    transcriptId?: string
+    message?: string
   } | null>(null)
 
   // Load available participants and suggested topics on component mount
@@ -252,15 +252,17 @@ export default function Simulation() {
       }
 
       // Call the simulation action
-      const result = await simulateDebateAction(options)
+      const result = await simulateDebateAction(
+        options.participants.map(p => p.name),
+        options.topic
+      )
 
       if (result.isSuccess && result.data) {
         setSimulationResult({
-          debateId: result.data.debate.id,
-          transcriptId: result.data.transcriptId,
+          debateId: result.data.debateId, // Use 'debateId' as the correct property
+          transcriptId: result.data.transcript, // Use 'transcript' as the correct property
           message: result.message || "Debate simulated successfully"
         })
-
         // Switch to the results tab
         setCurrentTab("results")
       } else {

@@ -24,6 +24,12 @@
 
 import Sidebar from "@/components/dashboard/sidebar"
 import { cn } from "@/lib/utils"
+import dynamic from "next/dynamic"
+import { TooltipProvider } from "@/components/ui/tooltip"
+
+const DashboardPage = dynamic(() => import("./page"), {
+  loading: () => <div>Loading dashboard...</div>
+})
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -39,19 +45,23 @@ export default async function DashboardLayout({
   children
 }: DashboardLayoutProps) {
   return (
-    <div className="bg-background flex min-h-screen">
-      {/* Sidebar Navigation */}
-      <Sidebar />
+    <TooltipProvider>
+      <div className="bg-background flex min-h-screen">
+        {/* Sidebar Navigation */}
+        <Sidebar />
 
-      {/* Main Content Area */}
-      <main
-        className={cn(
-          "flex-1 p-4 md:p-6 lg:p-8", // Responsive padding
-          "overflow-auto" // Ensures content scrolls if it exceeds viewport
-        )}
-      >
-        {children}
-      </main>
-    </div>
+        {/* Main Content Area */}
+        <main
+          id="main-content"
+          className={cn(
+            "flex-1 p-4 md:p-6 lg:p-8", // Responsive padding
+            "overflow-auto" // Ensures content scrolls if it exceeds viewport
+          )}
+        >
+          <DashboardPage />
+          {children}
+        </main>
+      </div>
+    </TooltipProvider>
   )
 }

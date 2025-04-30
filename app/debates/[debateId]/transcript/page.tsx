@@ -31,7 +31,8 @@
  */
 import { useRouter } from "next/router"
 import TranscriptViewer from "@/components/transcripts/transcript-viewer"
-import { getTranscriptByDebateId } from "@/actions/db/transcript-actions"
+import { ensureTranscriptForDebate } from "@/actions/ai/Transcripts/ensureTranscriptForDebate"
+import TranscriptPageClient from "./TranscriptPageClient"
 
 /**
  * Props interface for the TranscriptPage component.
@@ -49,25 +50,5 @@ interface TranscriptPageProps {
  */
 export default async function TranscriptPage({ params }: TranscriptPageProps) {
   const { debateId } = params
-
-  // Fetch the transcript for the given debateId
-  const transcript = await getTranscriptByDebateId(debateId)
-
-  if (!transcript) {
-    return (
-      <div className="container mx-auto py-12 text-center">
-        <h1 className="text-2xl font-bold text-white">Transcript Not Found</h1>
-        <p className="text-gray-400">
-          The transcript for this debate could not be found.
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="container mx-auto py-12">
-      <h1 className="mb-6 text-3xl font-bold text-white">Debate Transcript</h1>
-      <TranscriptViewer content={transcript.content} />
-    </div>
-  )
+  return <TranscriptPageClient debateId={debateId} />
 }

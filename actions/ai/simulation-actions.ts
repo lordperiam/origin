@@ -7,7 +7,15 @@
 
 import { openai } from "@/lib/ai"
 import { ActionState } from "@/types"
-import { SimulatedDebateResult } from "@/types/simulation-types"
+import { SimulatedParticipant, SimulationOptions } from "@/types/simulation-types"
+
+// Define the SimulatedDebateResult type locally until it's added to simulation-types.ts
+interface SimulatedDebateResult {
+  transcript: string;
+  summary: string;
+  participants: SimulatedParticipant[];
+  topic: string;
+}
 
 /**
  * Simulates a debate between participants on a topic.
@@ -43,7 +51,9 @@ export async function simulateDebateAction(
       message: "Debate simulation complete.",
       data: {
         transcript: transcript.trim(),
-        summary: summaryParts.join("Summary:").trim() || ""
+        summary: summaryParts.join("Summary:").trim() || "",
+        participants: participants.map(name => ({ name, description: "" })),
+        topic: topic
       }
     }
   } catch (error: any) {
@@ -60,7 +70,7 @@ export async function simulateDebateAction(
  * @param participant - The participant to get the persona for
  * @returns The persona prompt for the specified participant
  */
-function getParticipantPersona(participant: SimulatedParticipant): string {
+export async function getParticipantPersona(participant: SimulatedParticipant): Promise<string> {
   // Predefined personas for common debate participants
   const personaMap: Record<string, string> = {
     "Socrates": "You are Socrates, an ancient Greek philosopher known for your Socratic method of questioning. Your debate style focuses on asking probing questions to expose contradictions in others' reasoning. You value pursuit of truth through dialogue, intellectual humility, and ethical inquiry. You are known for your irony and claim to know nothing while demonstrating wisdom.",

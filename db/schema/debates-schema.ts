@@ -49,6 +49,54 @@ export const debatesTable = pgTable("debates", {
 })
 
 /**
+ * Argument Evolutions table definition.
+ * Tracks the evolution of arguments within a debate over time.
+ * Each entry represents a change or development in an argument.
+ */
+export const argumentEvolutionsTable = pgTable("argument_evolutions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  debateId: uuid("debate_id")
+    .notNull()
+    .references(() => debatesTable.id),
+  argumentText: text("argument_text").notNull(),
+  evolutionType: text("evolution_type"), // e.g., 'refined', 'rebutted', 'supported', etc.
+  author: text("author"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date())
+})
+
+/**
+ * Debate Justifications table definition.
+ * Stores justifications or rationales for debate outcomes or positions.
+ */
+export const debateJustificationsTable = pgTable("debate_justifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  debateId: uuid("debate_id")
+    .notNull()
+    .references(() => debatesTable.id),
+  justificationText: text("justification_text").notNull(),
+  author: text("author"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date())
+})
+
+export type InsertArgumentEvolution =
+  typeof argumentEvolutionsTable.$inferInsert
+export type SelectArgumentEvolution =
+  typeof argumentEvolutionsTable.$inferSelect
+export type InsertDebateJustification =
+  typeof debateJustificationsTable.$inferInsert
+export type SelectDebateJustification =
+  typeof debateJustificationsTable.$inferSelect
+
+/**
  * Type for inserting a new debate.
  */
 export type InsertDebate = typeof debatesTable.$inferInsert

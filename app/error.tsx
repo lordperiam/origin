@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function Error({
   error,
@@ -16,16 +17,18 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center p-4">
-      <h2 className="mb-4 text-2xl font-bold text-red-500">
-        Something went wrong!
-      </h2>
-      <p className="mb-4 max-w-md text-center text-gray-600">
-        {error.message || "An unexpected error occurred"}
-      </p>
-      <Button variant="destructive" onClick={() => reset()}>
-        Try again
-      </Button>
+    <div className="flex min-h-screen flex-col items-center justify-center p-8 text-center">
+      <h1 className="mb-4 text-3xl font-bold">Something went wrong</h1>
+      <p className="mb-4">{error.message || "An unexpected error occurred."}</p>
+      <button
+        onClick={reset}
+        className="mb-2 rounded bg-blue-600 px-4 py-2 text-white"
+      >
+        Try Again
+      </button>
+      <Link href="/" className="text-blue-700 underline">
+        Go Home
+      </Link>
     </div>
   )
 }

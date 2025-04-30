@@ -26,6 +26,17 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip"
+import {
+  LayoutDashboard,
+  BarChart2,
+  Settings as SettingsIcon
+} from "lucide-react"
 
 /**
  * Renders the sidebar with navigation links.
@@ -35,9 +46,9 @@ import { cn } from "@/lib/utils"
 export default async function Sidebar() {
   // Define navigation items for the dashboard
   const navItems = [
-    { href: "/dashboard", label: "Overview" },
-    { href: "/dashboard/analyses", label: "Analyses" },
-    { href: "/dashboard/settings", label: "Settings" }
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/dashboard/analyses", label: "Analyses", icon: BarChart2 },
+    { href: "/dashboard/settings", label: "Settings", icon: SettingsIcon }
   ]
 
   return (
@@ -61,16 +72,26 @@ export default async function Sidebar() {
           {navItems.map(item => (
             <li key={item.href}>
               <Link href={item.href}>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start", // Full-width, left-aligned
-                    "text-sidebar-foreground hover:text-sidebar-primary", // Text and hover colors
-                    "hover:bg-sidebar-accent" // Subtle hover background
-                  )}
-                >
-                  {item.label}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start gap-2", // Add gap for icon spacing
+                          "text-sidebar-foreground hover:text-sidebar-primary",
+                          "hover:bg-sidebar-accent"
+                        )}
+                        aria-label={item.label}
+                        tabIndex={0}
+                      >
+                        <item.icon className="size-5" aria-hidden="true" />
+                        {item.label}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{item.label}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </Link>
             </li>
           ))}

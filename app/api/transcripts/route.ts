@@ -5,6 +5,7 @@ import {
 import { NextRequest, NextResponse } from "next/server"
 import { transcriptsTable } from "@/db/schema/transcripts-schema"
 import { db } from "@/db/db"
+import { ensureTranscriptForDebate } from "@/actions/ai/Transcripts/ensureTranscriptForDebate"
 
 /**
  * API route for transcripts
@@ -25,8 +26,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(result)
     }
     if (debateId) {
-      const result = await getDebateTranscriptsAction(debateId)
-      return NextResponse.json(result)
+      // Use the utility to get transcript and status
+      const { transcript, transcriptStatus } =
+        await ensureTranscriptForDebate(debateId)
+      return NextResponse.json({ transcript, transcriptStatus })
     }
     return NextResponse.json(
       { error: "debateId or transcriptId parameter is required" },

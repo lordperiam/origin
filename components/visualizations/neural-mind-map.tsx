@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { motion } from "framer-motion" // For UI animations
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 interface NeuralMindMapProps {
   interactive?: boolean
 }

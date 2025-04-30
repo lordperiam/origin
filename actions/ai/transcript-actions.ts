@@ -11,6 +11,10 @@ import { ActionState } from "@/types"
 import { Platform } from "@/types/platform-types"
 import { eq } from "drizzle-orm"
 import { openai } from "@/lib/ai" // Import centralized OpenAI client
+import { parsePodcastRssFeed } from "@/lib/utils/rss"
+import { exec } from "child_process"
+import util from "util"
+const execPromise = util.promisify(exec)
 
 /**
  * Helper function to extract video/audio IDs from various platform URLs
@@ -279,6 +283,34 @@ async function handleSpotifyContent(trackId: string): Promise<string> {
 }
 
 /**
+ * Helper function to download VOD audio using yt-dlp and transcribe with Whisper
+ */
+async function downloadAndTranscribeVOD(url: string): Promise<string> {
+  try {
+    const outputPath = `/tmp/vod_audio_${Date.now()}.mp3`
+    // Download audio using yt-dlp
+    await execPromise(`yt-dlp -x --audio-format mp3 -o ${outputPath} ${url}`)
+    // Read audio file as buffer
+    const fs = await import("fs/promises")
+    const audioBuffer = await fs.readFile(outputPath)
+    // Transcribe using OpenAI Whisper
+    const audioFile = new File([audioBuffer], "vod-audio.mp3", { type: "audio/mpeg" })
+    const transcription = await openai.audio.transcriptions.create({
+      file: audioFile,
+      model: "whisper-1",
+      language: "en",
+      response_format: "text",
+    })
+    // Clean up
+    await fs.unlink(outputPath)
+    return transcription
+  } catch (error) {
+    console.error("VOD download/transcription failed:", error)
+    throw new Error(`VOD download/transcription failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
+/**
  * Cross-verifies two transcripts and returns the most accurate version.
  * This implements the dual transcript generation and verification feature.
  * 
@@ -407,18 +439,33 @@ export async function generateTranscriptAction(
     try {
       switch (detectedPlatform) {
         case "YouTube":
-          transcriptContent = await fetchYouTubeCaptions(sourceId);
-          break;
-          
+        case "Twitch":
+          try {
+            transcriptContent = await fetchYouTubeCaptions(sourceId)
+          } catch (err) {
+            // Fallback to yt-dlp + Whisper
+            transcriptContent = await downloadAndTranscribeVOD(sourceUrl)
+          }
+          break
         case "Spotify":
           transcriptContent = await handleSpotifyContent(sourceId);
           break;
-          
         case "DirectMedia":
           // Direct transcription for media files
           transcriptContent = await transcribeAudioFromUrl(sourceUrl);
           break;
-          
+        case "Podcasts":
+        case "Substack":
+          try {
+            const episodes = await parsePodcastRssFeed(sourceUrl)
+            if (!episodes.length) throw new Error("No episodes found in RSS feed.")
+            // Use the latest episode for transcript
+            const latest = episodes[0]
+            transcriptContent = await transcribeAudioFromUrl(latest.audioUrl)
+          } catch (err) {
+            throw new Error(`RSS parsing/transcription failed: ${err instanceof Error ? err.message : String(err)}`)
+          }
+          break;
         default:
           // Generic approach for unsupported platforms
           // First try to detect if it's a direct media URL
@@ -431,7 +478,7 @@ export async function generateTranscriptAction(
           }
       }
     } catch (error: any) {
-      console.error(`Error transcribing from ${detectedPlatform}:`, error);
+      console.error(`Error transcribing from ${detectedPlatform} (${sourceUrl}):`, error);
       
       // Try direct transcription as fallback for any platform
       try {
@@ -487,10 +534,10 @@ export async function generateTranscriptAction(
       data: insertedTranscript
     }
   } catch (error: any) {
-    console.error("Error generating transcript:", error)
+    console.error(`Error generating transcript for platform=${platform}, url=${sourceUrl}:`, error)
     return {
       isSuccess: false,
-      message: `Failed to generate transcript: ${error.message || "Unknown error"}`
+      message: `Failed to generate transcript for platform=${platform}, url=${sourceUrl}: ${error.message || "Unknown error"}`
     }
   }
 }
