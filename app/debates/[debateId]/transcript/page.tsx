@@ -29,17 +29,16 @@
 /**
  * Imports required for the transcript page functionality.
  */
-import { getDebateByIdAction } from "@/actions/db/debates-actions"
-import { getDebateTranscriptsAction } from "@/actions/ai/transcript-actions"
+import { useRouter } from "next/router"
 import TranscriptViewer from "@/components/transcripts/transcript-viewer"
-import { notFound } from "next/navigation"
+import { getTranscriptByDebateId } from "@/actions/db/transcript-actions"
 
 /**
  * Props interface for the TranscriptPage component.
  * @interface TranscriptPageProps
  */
 interface TranscriptPageProps {
-  params: Promise<{ debateId: string }> // Dynamic route params with debateId
+  params: { debateId: string } // Dynamic route params with debateId
 }
 
 /**
@@ -49,51 +48,26 @@ interface TranscriptPageProps {
  * @returns {Promise<JSX.Element>} The rendered transcript page or error message
  */
 export default async function TranscriptPage({ params }: TranscriptPageProps) {
-  // Await params to get debateId per Next.js server component rules
-  const { debateId } = await params
+  const { debateId } = params
 
-  // Fetch debate details to display title and verify existence
-  const debateResult = await getDebateByIdAction(debateId)
-  if (!debateResult.isSuccess) {
-    // Return 404 if debate isn’t found
-    return notFound()
-  }
-  const debate = debateResult.data
+  // Fetch the transcript for the given debateId
+  const transcript = await getTranscriptByDebateId(debateId)
 
-  // Fetch transcripts for the debate
-  const transcriptsResult = await getDebateTranscriptsAction(debateId)
-  if (!transcriptsResult.isSuccess || transcriptsResult.data.length === 0) {
-    // Display message if no transcripts are available
+  if (!transcript) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <h1 className="mb-8 text-4xl font-bold text-white">
-          {(debate?.title ?? "Untitled Debate") + " - Transcript"}
-        </h1>
-
-        <div className="mt-4" />
-
-        <div>
-          <p className="text-white">No transcript available for this debate.</p>
-        </div>
+        <h1 className="text-2xl font-bold text-white">Transcript Not Found</h1>
+        <p className="text-gray-400">
+          The transcript for this debate could not be found.
+        </p>
       </div>
     )
   }
 
-  // Take the first transcript (assumption: one primary transcript per debate)
-  const transcript = transcriptsResult.data[0]
-
-  // Render the page with debate title and transcript content
   return (
     <div className="container mx-auto py-12">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white">
-          {(debate?.title ?? "Untitled Debate") + " - Transcript"}
-        </h1>
-      </div>
-
-      <div>
-        <TranscriptViewer content={transcript?.content ?? ""} />
-      </div>
+      <h1 className="mb-6 text-3xl font-bold text-white">Debate Transcript</h1>
+      <TranscriptViewer content={transcript.content} />
     </div>
   )
 }

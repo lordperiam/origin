@@ -1,9 +1,9 @@
-"use server"
+"use client"
 
 /**
  * @description
- * This server component displays the analysis content for a debate in the Neurogenesis app.
- * It renders the analysis results in a structured format, including rhetorical devices, logical fallacies, and argument quality.
+ * This client component renders the analysis results for a debate in the Neurogenesis app.
+ * It displays rhetorical devices, logical fallacies, and argument quality in a card layout.
  *
  * Key features:
  * - Displays analysis data from the database
@@ -16,7 +16,7 @@
  * - Card, CardContent, CardHeader, CardTitle: Shadcn UI components from '@/components/ui/card'
  *
  * @notes
- * - Marked as server component for static rendering efficiency per project rules
+ * - Marked as client component for static rendering efficiency per project rules
  * - Assumes analysis.results is a JSON object with specific keys; may need adjustment if structure changes
  * - Edge case: Handles missing analysis fields with fallback text
  * - Limitation: Basic display; future steps may add interactive features or detailed views

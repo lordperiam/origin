@@ -1,7 +1,6 @@
 /*
 Contains server actions related to debate analysis using AI.
-This file provides actions to analyze debate transcripts for rhetorical devices, logical fallacies, and argument quality,
-and to retrieve analysis data by debate ID.
+This file provides actions to analyze debate transcripts for rhetorical devices, logical fallacies, and argument quality.
 It supports the core functionality of debate analysis as outlined in the technical specification.
 */
 
@@ -16,7 +15,7 @@ import {
 import { transcriptsTable } from "@/db/schema/transcripts-schema"
 import { ActionState } from "@/types"
 import { eq } from "drizzle-orm"
-import OpenAI from "openai"
+import { openai } from "@/lib/ai" // Import centralized OpenAI client
 
 /**
  * Analyzes a debate transcript using AI to identify rhetorical devices, fallacies, and argument quality.
@@ -34,7 +33,7 @@ import OpenAI from "openai"
  * - db: Drizzle ORM database instance for queries and inserts
  * - analyses-schema: Schema for analyses table
  * - transcripts-schema: Schema for transcripts table
- * - openai: OpenAI library for AI analysis
+ * - openai: Centralized OpenAI client from lib/ai
  * 
  * @notes
  * - Assumes the transcript content is in English; multilingual support planned for future steps.
@@ -69,14 +68,6 @@ export async function analyzeTranscriptAction(
     }
 
     const { content, debateId } = transcript
-
-    // Check if OpenAI API key is set
-    if (!process.env.OPENAI_API_KEY) {
-      return { isSuccess: false, message: "OpenAI API key not set" }
-    }
-
-    // Initialize OpenAI client
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
     // Define the analysis prompt
     const prompt = `
@@ -120,71 +111,6 @@ Provide the analysis in a structured JSON format with keys for "rhetoricalDevice
     return {
       isSuccess: false,
       message: "Failed to analyze transcript"
-    }
-  }
-}
-
-/**
- * Retrieves an analysis by debate ID.
- *
- * @param debateId - The ID of the debate to retrieve the analysis for
- * @returns A promise resolving to an ActionState with the analysis data or an error message
- *
- * @remarks
- * - Queries the analyses table using Drizzle ORM’s query method.
- * - Returns the first analysis found for the debate (assumes one analysis per debate for now).
- * - Returns failure if no analysis is found or a database error occurs.
- * - Used by the analysis page to fetch and display analysis details.
- *
- * @dependencies
- * - db: Drizzle ORM database instance for queries
- * - analyses-schema: Schema for analyses table
- *
- * @notes
- * - Assumes one analysis per debate; multiple analyses could be supported in future steps.
- * - Edge case: Returns undefined data with a failure message if no analysis exists.
- * - Limitation: Does not support filtering or sorting; fetches first match only.
- *
- * @throws {Error} Logs and returns failure if the database query fails (e.g., connection issues).
- *
- * @example
- * const result = await getAnalysisByDebateIdAction("debate_123");
- * if (result.isSuccess) console.log(result.data);
- */
-export async function getAnalysisByDebateIdAction(
-  debateId: string
-): Promise<ActionState<SelectAnalysis | undefined>> {
-  try {
-    // Validate input
-    if (!debateId) {
-      return {
-        isSuccess: false,
-        message: "debateId is required"
-      }
-    }
-
-    // Fetch the analysis from the database
-    const analysis = await db.query.analyses.findFirst({
-      where: eq(analysesTable.debateId, debateId)
-    })
-
-    if (!analysis) {
-      return {
-        isSuccess: false,
-        message: "Analysis not found for this debate"
-      }
-    }
-
-    return {
-      isSuccess: true,
-      message: "Analysis retrieved successfully",
-      data: analysis
-    }
-  } catch (error) {
-    console.error("Error retrieving analysis:", error)
-    return {
-      isSuccess: false,
-      message: "Failed to retrieve analysis"
     }
   }
 }

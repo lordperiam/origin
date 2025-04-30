@@ -4,7 +4,14 @@ This schema stores user-related data, including membership status and Stripe int
 It aligns with the technical specification's "users" table but uses "profiles" to match the starter template.
 */
 
-import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import {
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  jsonb,
+  boolean
+} from "drizzle-orm/pg-core"
 
 /**
  * Enum for membership types, supporting free, pro, and institutional users as per the project requirements.
@@ -42,6 +49,14 @@ export const profilesTable = pgTable("profiles", {
   stripeCustomerId: text("stripe_customer_id"),
   // Optional Stripe subscription ID for subscription tracking
   stripeSubscriptionId: text("stripe_subscription_id"),
+  // Analysis settings stored as JSONB
+  analysisSettings: jsonb("analysis_settings").default({
+    detectRhetoricalDevices: true,
+    detectFallacies: true,
+    enableFactChecking: false
+  }),
+  // Onboarding completed status with default to 'false'
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
   // Creation timestamp, defaults to current time
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // Update timestamp, updates on modification

@@ -18,69 +18,22 @@
  * - Handles auth errors gracefully by continuing without user ID
  */
 
-import {
-  createProfileAction,
-  getProfileByUserIdAction
-} from "@/actions/db/profiles-actions"
-import { Toaster } from "@/components/ui/toaster"
-import { Providers } from "@/components/utilities/providers"
-import { TailwindIndicator } from "@/components/utilities/tailwind-indicator"
-import { cn } from "@/lib/utils"
+"use client"
+
+import React from "react"
 import { ClerkProvider } from "@clerk/nextjs"
-import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import SearchBar from "@/components/ui/search-bar"
+import { cn } from "@/lib/utils"
 
-// Initialize Inter font with Latin subset
 const inter = Inter({ subsets: ["latin"] })
 
-// Define metadata for the application
-export const metadata: Metadata = {
-  title: "Neurogenesis",
-  description: "Analyze debates and arguments with AI."
-}
-
-/**
- * Root layout component that wraps all pages
- * @param children - React nodes representing page content
- * @returns JSX element with authentication and theme providers
- */
-export default async function RootLayout({
+export default function RootLayout({
   children
 }: {
   children: React.ReactNode
 }) {
-  // Initialize userId variable
-  let userId: string | undefined
-
-  // Attempt to get user ID and sync profile
-  try {
-    // Import auth in a way that allows the app to continue if Clerk isn't configured yet
-    try {
-      // Dynamically import auth to avoid middleware issues
-      const { auth } = await import("@clerk/nextjs/server")
-      const authResult = await auth()
-      userId = authResult.userId || undefined
-
-      // If user is authenticated, ensure profile exists
-      if (userId) {
-        const profileRes = await getProfileByUserIdAction(userId)
-        if (!profileRes.isSuccess) {
-          await createProfileAction({ userId })
-        }
-      }
-    } catch (clerkError) {
-      console.error("Clerk auth error:", clerkError)
-      // Proceed without authentication - this allows development without Clerk setup
-      console.log(
-        "Continuing without authentication - set up Clerk middleware for auth features"
-      )
-    }
-  } catch (error) {
-    console.error("Profile sync error:", error)
-    // Proceed without user ID if profile sync fails
-  }
-
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
@@ -90,18 +43,19 @@ export default async function RootLayout({
             inter.className
           )}
         >
-          <Providers
-            attribute="class"
-            defaultTheme="dark" // Set to dark to match Neurogenesis design
-            enableSystem={false} // Disable system theme detection
-            disableTransitionOnChange // Prevent transition flicker
-          >
-            {children}
-
-            <TailwindIndicator />
-
-            <Toaster />
-          </Providers>
+          <header className="bg-primary p-4 text-white">
+            <div className="container mx-auto flex items-center justify-between">
+              <h1 className="text-2xl font-bold">Neurogenesis</h1>
+              <SearchBar
+                placeholder="Search videos..."
+                onSearch={query => console.log("Search query:", query)}
+              />
+            </div>
+          </header>
+          <main className="container mx-auto py-8">{children}</main>
+          <footer className="bg-primary p-4 text-center text-white">
+            © 2025 Neurogenesis. All rights reserved.
+          </footer>
         </body>
       </html>
     </ClerkProvider>

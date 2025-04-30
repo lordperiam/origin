@@ -62,8 +62,6 @@ const transcriptsRelations = relations(transcriptsTable, ({ one }) => ({
  */
 export const db = drizzle(queryClient, {
   schema: {
-    ...debatesRelations,
-    ...transcriptsRelations,
     debates: debatesTable,
     transcripts: transcriptsTable,
     profiles: profilesTable,
@@ -71,11 +69,30 @@ export const db = drizzle(queryClient, {
   }
 })
 
+// Define relations separately
+debatesRelations
+transcriptsRelations
+
 // Initialize tables if they don't exist
 const initDb = async () => {
   try {
-    // Create tables if they don't exist
-    await db.execute(sql`
+    // Enable pgcrypto for UUID generation
+    await queryClient`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`
+
+    // Create membership enum type if it doesn't exist
+    await queryClient`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_type WHERE typname = 'membership'
+        ) THEN
+          CREATE TYPE membership AS ENUM ('free', 'pro', 'institutional');
+        END IF;
+      END $$;
+    `
+
+    // Create debates table
+    await queryClient`
       CREATE TABLE IF NOT EXISTS debates (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         source_platform TEXT NOT NULL,
@@ -86,7 +103,10 @@ const initDb = async () => {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
+    `
 
+    // Create transcripts table
+    await queryClient`
       CREATE TABLE IF NOT EXISTS transcripts (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         debate_id UUID NOT NULL REFERENCES debates(id) ON DELETE CASCADE,
@@ -96,16 +116,58 @@ const initDb = async () => {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-    `)
+    `
+
+    // Create profiles table
+    await queryClient`
+      CREATE TABLE IF NOT EXISTS profiles (
+        user_id TEXT PRIMARY KEY NOT NULL,
+        membership membership NOT NULL DEFAULT 'free',
+        stripe_customer_id TEXT,
+        stripe_subscription_id TEXT,
+        analysis_settings JSONB DEFAULT '{"detectRhetoricalDevices":true,"detectFallacies":true,"enableFactChecking":false}',
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `
+
+    // Ensure analysis_settings column exists
+    await queryClient`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'profiles' AND column_name = 'analysis_settings'
+        ) THEN
+          ALTER TABLE profiles 
+          ADD COLUMN analysis_settings JSONB DEFAULT '{"detectRhetoricalDevices":true,"detectFallacies":true,"enableFactChecking":false}';
+        END IF;
+      END $$;
+    `
+
+    // Ensure onboardingCompleted column exists
+    await queryClient`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'profiles' AND column_name = 'onboarding_completed'
+        ) THEN
+          ALTER TABLE profiles 
+          ADD COLUMN onboarding_completed BOOLEAN DEFAULT false NOT NULL;
+        END IF;
+      END $$;
+    `
 
     console.log("Database tables initialized successfully")
   } catch (error) {
     console.error("Error initializing database tables:", error)
   } finally {
-    // Close the migration client after initialization
     await migrationClient.end()
   }
 }
 
 // Run initialization
 initDb()
+
+export { initDb }

@@ -10,14 +10,9 @@ import { InsertTranscript, SelectTranscript, transcriptsTable } from "@/db/schem
 import { ActionState } from "@/types"
 import { Platform } from "@/types/platform-types"
 import { eq } from "drizzle-orm"
-import OpenAI from "openai"
+import { openai } from "@/lib/ai" // Import centralized OpenAI client
 import { createReadStream } from "fs"
 import { Readable } from "stream"
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
 
 /**
  * Generates a transcript for a debate from a source URL and stores it in the database.
@@ -103,14 +98,6 @@ export async function generateTranscriptAction(
     } else {
       // For non-YouTube sources or if captions not available, use OpenAI to transcribe
       try {
-        // Check if OpenAI API key is available
-        if (!process.env.OPENAI_API_KEY) {
-          return {
-            isSuccess: false,
-            message: "OpenAI API key is required for audio transcription"
-          }
-        }
-        
         // Download the audio file
         const audioResponse = await fetch(sourceUrl);
         if (!audioResponse.ok) {

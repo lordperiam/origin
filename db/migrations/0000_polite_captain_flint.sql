@@ -1,4 +1,14 @@
-ALTER TYPE "public"."membership" ADD VALUE 'institutional';--> statement-breakpoint
+CREATE TYPE "public"."membership" AS ENUM('free', 'pro', 'institutional');--> statement-breakpoint
+CREATE TABLE "profiles" (
+	"user_id" text PRIMARY KEY NOT NULL,
+	"membership" "membership" DEFAULT 'free' NOT NULL,
+	"stripe_customer_id" text,
+	"stripe_subscription_id" text,
+	"analysis_settings" jsonb DEFAULT '{"detectRhetoricalDevices":true,"detectFallacies":true,"enableFactChecking":false}'::jsonb,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "debates" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"source_platform" text NOT NULL,

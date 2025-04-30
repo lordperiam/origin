@@ -4,12 +4,13 @@ This server page is the marketing homepage.
 
 "use server"
 
-import { HeroSection } from "@/components/landing/hero"
+import React from "react"
+import NeuralMindMapWrapper from "@/components/visualizations/neural-mind-map-wrapper"
 
 export default async function HomePage() {
   return (
-    <div className="pb-20">
-      <HeroSection />
+    <div className="relative h-screen w-full overflow-hidden bg-black">
+      <NeuralMindMapWrapper />
     </div>
   )
 }
