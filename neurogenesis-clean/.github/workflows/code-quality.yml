@@ -1,0 +1,41 @@
+name: Code Quality Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Type check
+      run: npm run type-check
+      
+    - name: Lint
+      run: npm run lint
+      
+    - name: Test
+      run: npm run test
+      
+    - name: Build
+      run: npm run build
+      
+    - name: Structure validation
+      run: node scripts/validate-structure.js
+
+    - name: Next.js bundle analysis
+      run: npm run analyze

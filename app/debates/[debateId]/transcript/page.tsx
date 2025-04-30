@@ -32,7 +32,11 @@
 import { useRouter } from "next/router"
 import TranscriptViewer from "@/components/transcripts/transcript-viewer"
 import { ensureTranscriptForDebate } from "@/actions/ai/Transcripts/ensureTranscriptForDebate"
-import TranscriptPageClient from "./TranscriptPageClient"
+import TranscriptPageClient from "@/components/transcripts/TranscriptPageClient"
+import { getDebateByIdAction } from "@/actions/db/debates-actions"
+import { getDebateTranscriptsAction } from "@/actions/ai/transcript-actions"
+import TranscriptStatusClient from "@/components/transcripts/transcript-status-client"
+import { notFound } from "next/navigation"
 
 /**
  * Props interface for the TranscriptPage component.
@@ -43,12 +47,35 @@ interface TranscriptPageProps {
 }
 
 /**
- * Transcript page component that fetches and displays a debate’s transcript.
+ * Debate transcript page placeholder
  *
  * @param {TranscriptPageProps} props - Component props containing route parameters
- * @returns {Promise<JSX.Element>} The rendered transcript page or error message
+ * @returns {JSX.Element} The rendered placeholder for the transcript page
  */
-export default async function TranscriptPage({ params }: TranscriptPageProps) {
-  const { debateId } = params
-  return <TranscriptPageClient debateId={debateId} />
+export default async function DebateTranscriptPage({
+  params
+}: {
+  params: { debateId: string }
+}) {
+  const debateResult = await getDebateByIdAction(params.debateId)
+  if (!debateResult.isSuccess || !debateResult.data) {
+    notFound()
+  }
+  const transcriptsResult = await getDebateTranscriptsAction(params.debateId)
+  const transcript =
+    transcriptsResult.isSuccess && transcriptsResult.data.length > 0
+      ? transcriptsResult.data[0]
+      : null
+
+  if (!transcript) {
+    // Show transcript generation status client component
+    return <TranscriptStatusClient debateId={params.debateId} />
+  }
+
+  return (
+    <div className="container mx-auto py-12">
+      <h1 className="mb-6 text-3xl font-bold text-white">Debate Transcript</h1>
+      <TranscriptViewer content={transcript.content} />
+    </div>
+  )
 }

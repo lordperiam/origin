@@ -1,0 +1,9 @@
+import { TranscriptPageProps } from '@/lib/types'
+import TranscriptPageClient from './client'
+
+// ...existing code...
+export default async function TranscriptPage({ params }: TranscriptPageProps) {
+  const { debateId } = params
+  return <TranscriptPageClient debateId={debateId} />
+}
+// ...existing code...
