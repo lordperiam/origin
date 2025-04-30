@@ -29,6 +29,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
+  const isHomePage = pathname === "/"
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -50,20 +51,36 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [pathname]) // Re-run effect if pathname changes
 
+  // Determine text color based on page
+  const textColor = isHomePage ? "text-white" : "text-black"
+  const textHoverColor = isHomePage
+    ? "hover:text-primary"
+    : "hover:text-primary"
+  const menuBgColor = isHomePage
+    ? "bg-black/90 backdrop-blur-lg"
+    : "bg-white/90 backdrop-blur-lg border-neutral-200"
+
   return (
+    // Ensure the header has a proper z-index and background color to avoid overlap issues
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 50, damping: 15 }}
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        isScrolled ? "bg-black/70 shadow-lg backdrop-blur-md" : "bg-transparent"
+      className={`fixed inset-x-0 top-0 z-50 bg-white transition-colors duration-300 ${
+        isScrolled
+          ? "bg-black/70 shadow-lg backdrop-blur-md"
+          : isHomePage
+            ? "bg-transparent"
+            : "bg-white/80 shadow-sm backdrop-blur-sm"
       }`}
     >
-      <div className="container mx-auto flex max-w-7xl items-center justify-between p-4 text-white">
+      <div className="container mx-auto flex max-w-7xl items-center justify-between p-4">
         {/* Simplified Logo/Brand Name */}
         <Link href="/" className="group flex items-center space-x-2">
           <BrainCircuit className="text-primary size-7 transition-transform duration-300 group-hover:rotate-12" />
-          <span className="group-hover:text-primary text-2xl font-semibold tracking-tight transition-colors duration-300">
+          <span
+            className={`group-hover:text-primary text-2xl font-semibold tracking-tight transition-colors duration-300 ${textColor}`}
+          >
             Neurogenesis
           </span>
         </Link>
@@ -78,7 +95,9 @@ export default function Header() {
             >
               <Link
                 href={link.href}
-                className="hover:text-primary group flex items-center space-x-1.5 rounded-md p-2 text-neutral-300 transition-colors duration-200"
+                className={`${textHoverColor} group flex items-center space-x-1.5 rounded-md p-2 ${
+                  isHomePage ? "text-neutral-300" : "text-neutral-600"
+                } transition-colors duration-200`}
                 title={link.label} // Tooltip for accessibility
               >
                 <link.icon className="size-5" />
@@ -92,7 +111,9 @@ export default function Header() {
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/dashboard"
-                className="hover:text-primary group flex items-center space-x-1.5 rounded-md p-2 text-neutral-300 transition-colors duration-200"
+                className={`${textHoverColor} group flex items-center space-x-1.5 rounded-md p-2 ${
+                  isHomePage ? "text-neutral-300" : "text-neutral-600"
+                } transition-colors duration-200`}
                 title="Dashboard"
               >
                 <BrainCircuit className="size-5" />
@@ -110,7 +131,11 @@ export default function Header() {
             <SignInButton>
               <Button
                 variant="ghost"
-                className="hover:text-primary px-4 py-2 text-neutral-300 hover:bg-white/10"
+                className={`${textHoverColor} px-4 py-2 ${
+                  isHomePage
+                    ? "text-neutral-300 hover:bg-white/10"
+                    : "text-neutral-600 hover:bg-black/5"
+                }`}
               >
                 Sign In
               </Button>
@@ -137,7 +162,11 @@ export default function Header() {
               size="icon"
               onClick={toggleMenu}
               aria-label="Toggle menu"
-              className="hover:text-primary text-neutral-300 hover:bg-white/10"
+              className={`${textHoverColor} ${
+                isHomePage
+                  ? "text-neutral-300 hover:bg-white/10"
+                  : "text-neutral-600 hover:bg-black/5"
+              }`}
             >
               {isMenuOpen ? (
                 <X className="size-6" />
@@ -155,14 +184,20 @@ export default function Header() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="border-t border-neutral-700 bg-black/90 p-4 backdrop-blur-lg md:hidden"
+          className={`${menuBgColor} ${
+            isHomePage
+              ? "border-t border-neutral-700"
+              : "border-t border-neutral-200"
+          } p-4 md:hidden`}
         >
           <ul className="space-y-3">
             {navLinks.map(link => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="hover:text-primary flex items-center space-x-3 rounded-md p-2 text-neutral-200 transition-colors duration-200"
+                  className={`${textHoverColor} flex items-center space-x-3 rounded-md p-2 ${
+                    isHomePage ? "text-neutral-200" : "text-neutral-700"
+                  } transition-colors duration-200`}
                   onClick={toggleMenu}
                 >
                   <link.icon className="size-5" />
@@ -174,7 +209,9 @@ export default function Header() {
               <li>
                 <Link
                   href="/dashboard"
-                  className="hover:text-primary flex items-center space-x-3 rounded-md p-2 text-neutral-200 transition-colors duration-200"
+                  className={`${textHoverColor} flex items-center space-x-3 rounded-md p-2 ${
+                    isHomePage ? "text-neutral-200" : "text-neutral-700"
+                  } transition-colors duration-200`}
                   onClick={toggleMenu}
                 >
                   <BrainCircuit className="size-5" />

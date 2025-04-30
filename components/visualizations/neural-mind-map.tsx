@@ -3,9 +3,9 @@
 import React, { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { motion } from "framer-motion" // For UI animations
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
 interface NeuralMindMapProps {
-  interactive?: boolean;
+  interactive?: boolean
 }
 export default function NeuralMindMap({ interactive = true }) {
   const mountRef = useRef<HTMLDivElement>(null)
@@ -22,7 +22,7 @@ export default function NeuralMindMap({ interactive = true }) {
     // Scene setup
     const scene = new THREE.Scene()
     scene.fog = new THREE.FogExp2(0x000000, 0.001) // Subtle fog for depth
-    
+
     const camera = new THREE.PerspectiveCamera(
       60,
       currentMount.clientWidth / currentMount.clientHeight,
@@ -30,15 +30,17 @@ export default function NeuralMindMap({ interactive = true }) {
       1000
     )
     camera.position.z = 70
-    
+
     // Renderer with better quality for the glowing effect
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
       alpha: true,
-      powerPreference: "high-performance",
+      powerPreference: "high-performance"
     })
     renderer.setSize(currentMount.clientWidth, currentMount.clientHeight)
-    renderer.setPixelRatio(window.devicePixelRatio > 2 ? 2 : window.devicePixelRatio) // Limit for performance
+    renderer.setPixelRatio(
+      window.devicePixelRatio > 2 ? 2 : window.devicePixelRatio
+    ) // Limit for performance
     renderer.setClearColor(0x000000, 0) // Transparent background
     renderer.toneMapping = THREE.ACESFilmicToneMapping // Better color handling
     renderer.toneMappingExposure = 1.2 // Slightly brighter
@@ -67,19 +69,19 @@ export default function NeuralMindMap({ interactive = true }) {
 
     const color = new THREE.Color()
 
-    // Create fluid, organic-looking particle clusters 
+    // Create fluid, organic-looking particle clusters
     // instead of a uniform sphere, similar to the blue image
     for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3
-      
+
       // Organic distribution combining multiple patterns
       const phi = Math.random() * Math.PI * 2
       const costheta = Math.random() * 2 - 1
       const theta = Math.acos(costheta)
-      
+
       // Base radius with noise
       let radius
-      
+
       // Create two main clusters of particles with a connecting bridge
       const cluster = Math.random()
       if (cluster < 0.4) {
@@ -98,9 +100,9 @@ export default function NeuralMindMap({ interactive = true }) {
         // Bridge/connecting filaments
         radius = 10 + Math.random() * 60
         const t = Math.random()
-        positions[i3] = (25 * t - 20 * (1-t)) + (Math.random() - 0.5) * 20
-        positions[i3 + 1] = (-10 * t + 5 * (1-t)) + (Math.random() - 0.5) * 20
-        positions[i3 + 2] = (15 * t - 10 * (1-t)) + (Math.random() - 0.5) * 20
+        positions[i3] = 25 * t - 20 * (1 - t) + (Math.random() - 0.5) * 20
+        positions[i3 + 1] = -10 * t + 5 * (1 - t) + (Math.random() - 0.5) * 20
+        positions[i3 + 2] = 15 * t - 10 * (1 - t) + (Math.random() - 0.5) * 20
       }
 
       // Precise electric blue color palette with variations
@@ -108,26 +110,27 @@ export default function NeuralMindMap({ interactive = true }) {
       const blueHue = 0.58 + Math.random() * 0.07 // Blue-cyan range
       const saturation = 0.8 + Math.random() * 0.2 // High saturation for vibrancy
       const lightness = 0.5 + Math.random() * 0.3 // Varied brightness
-      
+
       // Occasionally add white-blue highlights
       if (Math.random() > 0.97) {
         color.setHSL(blueHue, 0.3, 0.85) // Brighter highlights
       } else {
         color.setHSL(blueHue, saturation, lightness)
       }
-      
+
       colors[i3] = color.r
       colors[i3 + 1] = color.g
       colors[i3 + 2] = color.b
 
       // Varied particle sizes - mostly small with some larger ones
-      const particleSize = Math.random() > 0.95 
-        ? Math.random() * 3 + 1.5 
-        : Math.random() * 1.2 + 0.8
-      
+      const particleSize =
+        Math.random() > 0.95
+          ? Math.random() * 3 + 1.5
+          : Math.random() * 1.2 + 0.8
+
       sizes[i] = particleSize
       opacities[i] = 0.7 + Math.random() * 0.3 // Varied opacity
-      
+
       // Add velocity for animation
       velocities.push({
         x: (Math.random() - 0.5) * 0.05,
@@ -143,7 +146,7 @@ export default function NeuralMindMap({ interactive = true }) {
     geometry.setAttribute("opacity", new THREE.BufferAttribute(opacities, 1))
 
     // Custom particle texture for better glow effect
-    const particleTexture = new THREE.TextureLoader().load("/particle-glow.png") 
+    const particleTexture = new THREE.TextureLoader().load("/particle-glow.png")
 
     // Enhanced shader material with improved glow and interactions
     const material = new THREE.ShaderMaterial({
@@ -239,33 +242,36 @@ export default function NeuralMindMap({ interactive = true }) {
     scene.add(particles)
 
     // Add secondary smaller particles for background depth
-    const bgParticleCount = 5000;
-    const bgGeometry = new THREE.BufferGeometry();
-    const bgPositions = new Float32Array(bgParticleCount * 3);
-    
+    const bgParticleCount = 5000
+    const bgGeometry = new THREE.BufferGeometry()
+    const bgPositions = new Float32Array(bgParticleCount * 3)
+
     for (let i = 0; i < bgParticleCount * 3; i += 3) {
       // Position small particles in a larger sphere
-      const radius = 100 + Math.random() * 150;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
-      
-      bgPositions[i] = radius * Math.sin(phi) * Math.cos(theta);
-      bgPositions[i+1] = radius * Math.sin(phi) * Math.sin(theta);
-      bgPositions[i+2] = radius * Math.cos(phi);
+      const radius = 100 + Math.random() * 150
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(Math.random() * 2 - 1)
+
+      bgPositions[i] = radius * Math.sin(phi) * Math.cos(theta)
+      bgPositions[i + 1] = radius * Math.sin(phi) * Math.sin(theta)
+      bgPositions[i + 2] = radius * Math.cos(phi)
     }
-    
-    bgGeometry.setAttribute("position", new THREE.BufferAttribute(bgPositions, 3));
-    
+
+    bgGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(bgPositions, 3)
+    )
+
     const bgMaterial = new THREE.PointsMaterial({
       size: 0.5,
       color: 0x0066ff,
       opacity: 0.3,
       blending: THREE.AdditiveBlending,
       transparent: true
-    });
-    
-    const bgParticles = new THREE.Points(bgGeometry, bgMaterial);
-    scene.add(bgParticles);
+    })
+
+    const bgParticles = new THREE.Points(bgGeometry, bgMaterial)
+    scene.add(bgParticles)
 
     // Mouse move listener with smooth tracking
     const targetMouse = new THREE.Vector2()
@@ -305,7 +311,7 @@ export default function NeuralMindMap({ interactive = true }) {
 
       const elapsedTime = clock.getElapsedTime()
       material.uniforms.time.value = elapsedTime
-      
+
       // Smooth mouse movement with interpolation (easing)
       mouse.current.x += (targetMouse.x - mouse.current.x) * 0.05
       mouse.current.y += (targetMouse.y - mouse.current.y) * 0.05
@@ -320,41 +326,41 @@ export default function NeuralMindMap({ interactive = true }) {
 
       // Update particle positions for organic movement
       const positions = geometry.attributes.position.array
-      
-      for(let i = 0; i < particleCount; i++) {
+
+      for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3
         const velocity = velocities[i]
-        
+
         // Apply soft, fluid-like motion to particles
         positions[i3] += velocity.x
         positions[i3 + 1] += velocity.y
         positions[i3 + 2] += velocity.z
-        
+
         // Subtle bounds to keep particles in general viewing area
         // but with soft edges - this simulates a fluid-like behavior
         const posX = positions[i3]
         const posY = positions[i3 + 1]
         const posZ = positions[i3 + 2]
         const distance = Math.sqrt(posX * posX + posY * posY + posZ * posZ)
-        
+
         if (distance > 80) {
           velocity.x -= posX * 0.0002
           velocity.y -= posY * 0.0002
           velocity.z -= posZ * 0.0002
         }
-        
+
         // Add very slight damping for stability
         velocity.x *= 0.999
         velocity.y *= 0.999
         velocity.z *= 0.999
       }
-      
+
       geometry.attributes.position.needsUpdate = true
-      
+
       // Subtle continuous rotation of the entire scene for added dynamism
       particles.rotation.y = Math.sin(elapsedTime * 0.05) * 0.1
       particles.rotation.x = Math.sin(elapsedTime * 0.03) * 0.05
-      
+
       // Rotate background particles more slowly in opposite direction
       bgParticles.rotation.y = elapsedTime * -0.02
       bgParticles.rotation.z = elapsedTime * 0.01
@@ -367,7 +373,7 @@ export default function NeuralMindMap({ interactive = true }) {
       renderer.render(scene, camera)
     }
     animate()
-    
+
     // Set loaded state after initial render
     setTimeout(() => setLoaded(true), 500)
 
@@ -380,21 +386,21 @@ export default function NeuralMindMap({ interactive = true }) {
       window.removeEventListener("touchmove", onTouchMove)
       window.removeEventListener("resize", onResize)
       clearTimeout(resizeTimeout)
-      
+
       if (controlsRef.current) {
         controlsRef.current.dispose()
       }
-      
+
       if (currentMount.contains(renderer.domElement)) {
         currentMount.removeChild(renderer.domElement)
       }
-      
+
       // Dispose of resources
       geometry.dispose()
       material.dispose()
       bgGeometry.dispose()
       bgMaterial.dispose()
-      
+
       if (particleTexture) {
         particleTexture.dispose()
       }
@@ -405,15 +411,15 @@ export default function NeuralMindMap({ interactive = true }) {
   // Render the visualization with a fade-in effect
   return (
     <>
-      <div 
-        ref={mountRef} 
-        className="absolute left-0 top-0 z-0 size-full" 
+      <div
+        ref={mountRef}
+        className="absolute left-0 top-0 z-0 size-full"
         aria-hidden="true"
       />
-      
+
       {/* Overlay with subtle vignette for enhanced depth */}
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-radial from-transparent to-black/30" />
-      
+      <div className="bg-gradient-radial pointer-events-none absolute inset-0 z-[1] from-transparent to-black/30" />
+
       {/* Fade-in animation */}
       <motion.div
         initial={{ opacity: 0 }}

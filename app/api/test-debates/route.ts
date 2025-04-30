@@ -1,57 +1,87 @@
 "use server"
 
-import { fetchDebatesFromPlatformAction } from "@/actions/db/debates-actions"
+import {
+  getAllDebatesAction,
+  fetchDebatesFromPlatformAction
+} from "@/actions/db/debates-actions"
+import { debatesTable } from "@/db/schema/debates-schema"
+import { db } from "@/db/db"
 import { Platform } from "@/types/platform-types"
 import { NextRequest, NextResponse } from "next/server"
 
 /**
- * API route to test fetchDebatesFromPlatformAction
+ * API route for debates
  *
- * This route accepts two query parameters:
- * - platform: The platform to fetch debates from (e.g., "YouTube", "Twitch")
- * - apiKey: The API key for the platform (optional, uses environment variable if not provided)
- *
- * Example usage:
- * GET /api/test-debates?platform=YouTube
- *
- * @param req - The Next.js request object
- * @returns A JSON response with the result of fetchDebatesFromPlatformAction
+ * GET:
+ *   - /api/debates            → all debates
+ *   - /api/debates?platform=X → debates filtered by platform
+ *   - /api/debates?platform=X&fetch=1 → fetch from platform API and store
+ * POST:
+ *   - Create a new debate (JSON body)
  */
 export async function GET(req: NextRequest) {
   try {
-    // Get platform from query parameters
     const searchParams = req.nextUrl.searchParams
     const platform = searchParams.get("platform") as Platform | null
+    const fetchFromPlatform = searchParams.get("fetch") === "1"
     const apiKey = searchParams.get("apiKey")
 
-    // Return error if platform is not provided
-    if (!platform) {
-      return NextResponse.json(
-        { error: "Platform parameter is required" },
-        { status: 400 }
-      )
+    if (platform && fetchFromPlatform) {
+      const key = apiKey || getApiKeyForPlatform(platform)
+      if (!key) {
+        return NextResponse.json(
+          { error: `API key for ${platform} is not available` },
+          { status: 400 }
+        )
+      }
+      const result = await fetchDebatesFromPlatformAction(platform, key)
+      return NextResponse.json(result)
     }
 
-    // Use provided API key or get from environment variables
-    const key = apiKey || getApiKeyForPlatform(platform)
-
-    // Return error if API key is not available
-    if (!key) {
-      return NextResponse.json(
-        { error: `API key for ${platform} is not available` },
-        { status: 400 }
+    // Get all debates or filter by platform
+    const allDebates = await getAllDebatesAction()
+    if (platform) {
+      const filtered = (allDebates.data || []).filter(
+        d => d.sourcePlatform === platform
       )
+      return NextResponse.json({ ...allDebates, data: filtered })
     }
-
-    // Call the action with platform and API key
-    const result = await fetchDebatesFromPlatformAction(platform, key)
-
-    // Return the result
-    return NextResponse.json(result)
+    return NextResponse.json(allDebates)
   } catch (error) {
-    console.error("Error in test-debates API route:", error)
+    console.error("Error in debates API route:", error)
     return NextResponse.json(
       { error: "Failed to fetch debates" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    // Basic validation
+    if (!body.title || !body.sourcePlatform || !body.sourceId) {
+      return NextResponse.json(
+        { error: "title, sourcePlatform, and sourceId are required" },
+        { status: 400 }
+      )
+    }
+    const newDebate = {
+      title: body.title,
+      sourcePlatform: body.sourcePlatform,
+      sourceId: body.sourceId,
+      participants: body.participants || [],
+      date: body.date ? new Date(body.date) : undefined
+    }
+    const [inserted] = await db
+      .insert(debatesTable)
+      .values(newDebate)
+      .returning()
+    return NextResponse.json({ isSuccess: true, data: inserted })
+  } catch (error) {
+    console.error("Error creating debate:", error)
+    return NextResponse.json(
+      { error: "Failed to create debate" },
       { status: 500 }
     )
   }

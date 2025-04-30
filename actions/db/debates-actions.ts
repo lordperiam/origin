@@ -210,13 +210,41 @@ async function fetchFromPlatform(platform: Platform, apiKey: string): Promise<Pl
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&q=debate&type=video&part=snippet&maxResults=10`
     );
-    const data = await response.json() as YouTubeResponse;
-    return data.items.map(item => ({
-      id: item.id.videoId,
-      title: item.snippet.title,
-      participants: [], // Extract from description or metadata if available
-      date: item.snippet.publishedAt
-    }));
+    const data = await response.json();
+    // For each video, fetch additional details to get channelTitle and description
+    const itemsWithParticipants = await Promise.all(
+      data.items.map(async (item: any) => {
+        // Fetch video details for channelTitle and description
+        const videoId = item.id.videoId;
+        const detailsRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${videoId}&part=snippet`
+        );
+        const detailsData = await detailsRes.json();
+        const snippet = detailsData.items[0]?.snippet || {};
+        const channelTitle = snippet.channelTitle || "Unknown";
+        const description = snippet.description || "";
+        // Try to extract participant names from the description (very basic: look for lines with 'vs' or ',')
+        let participants: string[] = [];
+        const vsMatch = description.match(/([\w .'-]+)\s+vs\.?\s+([\w .'-]+)/i);
+        if (vsMatch) {
+          participants = [vsMatch[1].trim(), vsMatch[2].trim()];
+        } else if (description.includes(",")) {
+          // Try splitting by comma if multiple names are listed
+          const firstLine = description.split("\n")[0];
+          const names = firstLine.split(",").map(s => s.trim()).filter(Boolean);
+          if (names.length > 1) participants = names;
+        }
+        // Always include channelTitle as a fallback participant
+        if (participants.length === 0) participants = [channelTitle];
+        return {
+          id: videoId,
+          title: item.snippet.title,
+          participants,
+          date: item.snippet.publishedAt
+        };
+      })
+    );
+    return itemsWithParticipants;
   } else if (platform === "Twitch") {
     const response = await fetch(
       `https://api.twitch.tv/helix/search/channels?query=debate`,

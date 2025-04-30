@@ -19,12 +19,30 @@ Contains the ESLint configuration for the app.
     "tailwindcss/no-contradicting-classname": "off",
     "tailwindcss/no-custom-classname": "off",
     "tailwindcss/no-unnecessary-arbitrary-value": "off",
-    "react/no-unescaped-entities": "off"
+    "react/no-unescaped-entities": "off",
+    "react/jsx-no-undef": ["error", { "allowGlobals": true }]
   },
   "settings": {
-    "tailwindcss": { "callees": ["cn", "cva"], "config": "tailwind.config.js" }
+    "tailwindcss": { "callees": ["cn", "cva"], "config": "tailwind.config.js" },
+    "react": {
+      "version": "detect"
+    },
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
   },
   "overrides": [
-    { "files": ["*.ts", "*.tsx"], "parser": "@typescript-eslint/parser" }
+    { 
+      "files": ["*.ts", "*.tsx"], 
+      "parser": "@typescript-eslint/parser" 
+    },
+    {
+      "files": ["**/components/dashboard/*.tsx"],
+      "rules": {
+        "react/jsx-no-undef": "off"
+      }
+    }
   ]
 }

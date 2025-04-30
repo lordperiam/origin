@@ -14,6 +14,10 @@ export type Platform =
   | "Reddit"
   | "Telegram"
   | "Discord"
+  | "SoundCloud"
+  | "Twitter"
+  | "DirectMedia"
+  | "Unknown"
   | "Other"
 
 // Base interface for platform items
