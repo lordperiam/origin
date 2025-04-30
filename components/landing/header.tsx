@@ -13,22 +13,22 @@ import {
   UserButton
 } from "@clerk/nextjs"
 import { motion } from "framer-motion"
-import { Menu, Receipt, X } from "lucide-react"
+import { BrainCircuit, Menu, Search, Sparkles, X } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 
+// Minimalist, conceptual navigation links
 const navLinks = [
-  { href: "/about", label: "About" },
-  { href: "/features", label: "Features" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/contact", label: "Contact" }
+  { href: "/debates", label: "Explore", icon: Search },
+  { href: "/argument-locator", label: "Analyze", icon: Sparkles }, // Assuming this is the primary analysis tool
+  { href: "/simulation", label: "Simulate", icon: BrainCircuit }
 ]
-
-const signedInLinks = [{ href: "/dashboard", label: "Dashboard" }]
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const pathname = usePathname()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -36,97 +36,100 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0)
+      // Only apply scroll effect if not on the homepage (which has a fixed background)
+      if (pathname !== "/") {
+        setIsScrolled(window.scrollY > 20)
+      } else {
+        setIsScrolled(false) // Keep header transparent on homepage
+      }
     }
 
     window.addEventListener("scroll", handleScroll)
+    // Initial check in case the page loads scrolled
+    handleScroll()
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  }, [pathname]) // Re-run effect if pathname changes
 
   return (
     <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className={`sticky top-0 z-50 transition-colors ${
-        isScrolled
-          ? "bg-background/80 shadow-sm backdrop-blur-sm"
-          : "bg-background"
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 50, damping: 15 }}
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
+        isScrolled ? "bg-black/70 shadow-lg backdrop-blur-md" : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto flex max-w-7xl items-center justify-between p-4">
-        <motion.div
-          className="flex items-center space-x-2 hover:cursor-pointer hover:opacity-80"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Receipt className="size-6" />
-          <Link href="/" className="text-xl font-bold">
-            Receipt AI
-          </Link>
-        </motion.div>
+      <div className="container mx-auto flex max-w-7xl items-center justify-between p-4 text-white">
+        {/* Simplified Logo/Brand Name */}
+        <Link href="/" className="group flex items-center space-x-2">
+          <BrainCircuit className="text-primary size-7 transition-transform duration-300 group-hover:rotate-12" />
+          <span className="group-hover:text-primary text-2xl font-semibold tracking-tight transition-colors duration-300">
+            Neurogenesis
+          </span>
+        </Link>
 
-        <nav className="absolute left-1/2 hidden -translate-x-1/2 space-x-2 md:flex">
+        {/* Desktop Navigation - Minimalist Icons + Text on Hover? Or just icons? Let's try icons primarily */}
+        <nav className="hidden items-center space-x-4 md:flex">
           {navLinks.map(link => (
             <motion.div
               key={link.href}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
               <Link
                 href={link.href}
-                className="text-muted-foreground hover:text-foreground rounded-full px-3 py-1 transition"
+                className="hover:text-primary group flex items-center space-x-1.5 rounded-md p-2 text-neutral-300 transition-colors duration-200"
+                title={link.label} // Tooltip for accessibility
               >
-                {link.label}
+                <link.icon className="size-5" />
+                <span className="text-sm opacity-0 transition-opacity delay-100 duration-200 group-hover:opacity-100">
+                  {link.label}
+                </span>
               </Link>
             </motion.div>
           ))}
-
           <SignedIn>
-            {signedInLinks.map(link => (
-              <motion.div
-                key={link.href}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                href="/dashboard"
+                className="hover:text-primary group flex items-center space-x-1.5 rounded-md p-2 text-neutral-300 transition-colors duration-200"
+                title="Dashboard"
               >
-                <Link
-                  href={link.href}
-                  className="text-muted-foreground hover:text-foreground rounded-full px-3 py-1 transition"
-                >
-                  {link.label}
-                </Link>
-              </motion.div>
-            ))}
+                <BrainCircuit className="size-5" />
+                <span className="text-sm opacity-0 transition-opacity delay-100 duration-200 group-hover:opacity-100">
+                  Dashboard
+                </span>
+              </Link>
+            </motion.div>
           </SignedIn>
         </nav>
 
-        <div className="flex items-center space-x-4">
+        {/* Auth Buttons & Mobile Menu Toggle */}
+        <div className="flex items-center space-x-3">
           <SignedOut>
             <SignInButton>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
+                variant="ghost"
+                className="hover:text-primary px-4 py-2 text-neutral-300 hover:bg-white/10"
               >
-                <Button variant="ghost">Sign In</Button>
-              </motion.div>
+                Sign In
+              </Button>
             </SignInButton>
-
             <SignUpButton>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button>Get Started</Button>
-              </motion.div>
+              <Button className="bg-primary hover:bg-primary/90 rounded-full px-5 py-2 font-semibold text-black transition-transform duration-200 hover:scale-105">
+                Begin
+              </Button>
             </SignUpButton>
           </SignedOut>
-
           <SignedIn>
-            <UserButton />
+            {/* Customize UserButton appearance if needed */}
+            <UserButton afterSignOutUrl="/" />
           </SignedIn>
 
+          {/* Mobile Menu Button */}
           <motion.div
             className="md:hidden"
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
             <Button
@@ -134,6 +137,7 @@ export default function Header() {
               size="icon"
               onClick={toggleMenu}
               aria-label="Toggle menu"
+              className="hover:text-primary text-neutral-300 hover:bg-white/10"
             >
               {isMenuOpen ? (
                 <X className="size-6" />
@@ -145,46 +149,38 @@ export default function Header() {
         </div>
       </div>
 
+      {/* Mobile Menu Panel */}
       {isMenuOpen && (
         <motion.nav
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="bg-primary-foreground text-primary p-4 md:hidden"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="border-t border-neutral-700 bg-black/90 p-4 backdrop-blur-lg md:hidden"
         >
-          <ul className="space-y-2">
-            <li>
-              <Link
-                href="/"
-                className="block hover:underline"
-                onClick={toggleMenu}
-              >
-                Home
-              </Link>
-            </li>
+          <ul className="space-y-3">
             {navLinks.map(link => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="block hover:underline"
+                  className="hover:text-primary flex items-center space-x-3 rounded-md p-2 text-neutral-200 transition-colors duration-200"
                   onClick={toggleMenu}
                 >
-                  {link.label}
+                  <link.icon className="size-5" />
+                  <span>{link.label}</span>
                 </Link>
               </li>
             ))}
             <SignedIn>
-              {signedInLinks.map(link => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="block hover:underline"
-                    onClick={toggleMenu}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link
+                  href="/dashboard"
+                  className="hover:text-primary flex items-center space-x-3 rounded-md p-2 text-neutral-200 transition-colors duration-200"
+                  onClick={toggleMenu}
+                >
+                  <BrainCircuit className="size-5" />
+                  <span>Dashboard</span>
+                </Link>
+              </li>
             </SignedIn>
           </ul>
         </motion.nav>

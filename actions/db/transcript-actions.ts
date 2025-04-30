@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm";
  */
 export async function getTranscriptByDebateId(debateId: string) {
   try {
-    const transcript = await db.query.transcriptsTable.findFirst({
+    const transcript = await db.query.transcripts.findFirst({
       where: eq(transcriptsTable.debateId, debateId),
     });
 

@@ -78,7 +78,9 @@ export default async function VerificationPage() {
       </h1>
       <VerificationForm
         userId={userId}
-        isVerified={profile.isVerified ?? false} // Provide a default value if isVerified is missing
+        isVerified={
+          "isVerified" in profile ? (profile as any).isVerified : false
+        } // Safely handle missing isVerified property
       />
     </div>
   )

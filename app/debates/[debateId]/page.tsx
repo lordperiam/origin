@@ -1,17 +1,22 @@
-import { useRouter } from "next/router"
+import { notFound } from "next/navigation"
 import DebateDetails from "@/components/debates/debate-details"
 
-export default function DebatePage() {
-  const router = useRouter()
-  const { debateId } = router.query
+interface DebatePageParams {
+  params: {
+    debateId: string
+  }
+}
+
+export default function DebatePage({ params }: DebatePageParams) {
+  const { debateId } = params
 
   if (!debateId) {
-    return <div>Loading...</div>
+    return notFound()
   }
 
   return (
     <div className="container mx-auto py-12">
-      <DebateDetails debateId={debateId as string} />
+      <DebateDetails debateId={debateId} />
     </div>
   )
 }

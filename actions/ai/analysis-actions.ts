@@ -114,3 +114,47 @@ Provide the analysis in a structured JSON format with keys for "rhetoricalDevice
     }
   }
 }
+
+/**
+ * Retrieves an analysis for a specific debate.
+ *
+ * @param debateId - The ID of the debate to fetch the analysis for
+ * @returns A promise resolving to an ActionState with the analysis or an error message
+ */
+export async function getAnalysisByDebateIdAction(
+  debateId: string
+): Promise<ActionState<SelectAnalysis>> {
+  try {
+    // Validate input
+    if (!debateId) {
+      return {
+        isSuccess: false,
+        message: "debateId is required"
+      }
+    }
+
+    // Fetch analysis from database
+    const analysis = await db.query.analyses.findFirst({
+      where: eq(analysesTable.debateId, debateId)
+    })
+
+    if (!analysis) {
+      return { 
+        isSuccess: false, 
+        message: "Analysis not found for this debate" 
+      }
+    }
+
+    return {
+      isSuccess: true,
+      message: "Analysis retrieved successfully",
+      data: analysis
+    }
+  } catch (error) {
+    console.error("Error retrieving analysis:", error)
+    return {
+      isSuccess: false,
+      message: "Failed to retrieve analysis"
+    }
+  }
+}

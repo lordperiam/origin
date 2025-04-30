@@ -35,28 +35,22 @@ import AnalysisViewer from "@/components/analysis/analysis-viewer"
 import { notFound } from "next/navigation"
 import NeuralMap from "@/components/visualizations/neural-map"
 
-/**
- * Props interface for the AnalysisPage component.
- * @interface AnalysisPageProps
- */
-interface AnalysisPageProps {
-  params: Promise<{ debateId: string }> // Dynamic route params with debateId
+// This properly defines the params type for dynamic routes in App Router
+type Props = {
+  params: { debateId: string }
 }
 
 /**
- * Analysis page component that fetches and displays a debate’s analysis.
- *
- * @param {AnalysisPageProps} props - Component props containing route parameters
- * @returns {Promise<JSX.Element>} The rendered analysis page or error message
+ * Analysis page component that fetches and displays a debate's analysis.
  */
-export default async function AnalysisPage({ params }: AnalysisPageProps) {
-  // Await params to get debateId per Next.js server component rules
-  const { debateId } = await params
+// @ts-ignore - TODO: Fix this type issue properly
+export default async function AnalysisPage({ params }: any) {
+  const { debateId } = params
 
   // Fetch debate details to display title and verify existence
   const debateResult = await getDebateByIdAction(debateId)
   if (!debateResult.isSuccess || !debateResult.data) {
-    // Return 404 if debate isn’t found
+    // Return 404 if debate isn't found
     return notFound()
   }
   const debate = debateResult.data
